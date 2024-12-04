@@ -18,6 +18,4 @@ library(ggplot2)
 library(dcData)
 
 tacoData <- read_csv("food-world-cup-data.csv")
-
-# should have named data set tortillaData instead...
 ```
