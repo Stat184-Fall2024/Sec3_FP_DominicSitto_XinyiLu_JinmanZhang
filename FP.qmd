@@ -19,3 +19,34 @@ library(dcData)
 
 tacoData <- read_csv("food-world-cup-data.csv")
 ```
+
+### 1. The file contains abnormal characters such as Ê, clean up these characters.
+
+--\>I replaced it in Excel.
+
+### 2. Data impute
+
+```{r}
+
+# Impute data: first impute by group, then use global median to fill remaining missing values
+tacoData_imputed <- tacoData %>%
+  # Group by Location, Gender, and Age, and impute missing values with the group median
+  group_by(`Location (Census Region)`, Gender, Age) %>%
+  mutate(across(where(is.numeric), ~ ifelse(is.na(.), median(., na.rm = TRUE), .))) %>%
+  ungroup() %>%
+  # For any remaining missing values, impute them with the global median
+  mutate(across(where(is.numeric), ~ ifelse(is.na(.), median(., na.rm = TRUE), .)))
+
+# View the imputed data
+print(head(tacoData_imputed))
+
+# Save the imputed data to a file
+write_csv(tacoData_imputed, "cleaned_food_world_cup_data_filled_by_global_median.csv")
+
+```
+
+### **Advantages of this Method**
+
+-   **Balances both local and global characteristics**: First, impute by group to capture the characteristics within each group; then use the global median to fill in missing values that could not be imputed by the group, ensuring that all data is completed.
+
+-   **Wide applicability**: Even if all values within a group are missing, the imputation will not fail because the global median serves as a fallback solution.
