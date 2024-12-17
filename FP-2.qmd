@@ -17,7 +17,7 @@ library(dplyr)
 library(ggplot2)
 library(dcData)
 
-foodDF <- read_csv("food-world-cup-data-2.csv")
+foodDF <- read_csv("cleaned_food_world_cup_data_filled_by_global_median.csv")
 ```
 
 ### 1. The file contains abnormal characters such as Ê, clean up these characters.
@@ -71,7 +71,6 @@ colnames(foodDF)
 
 ### **Figure 1**
 
-
 ```{r}
 library(ggplot2)
 ggplot(foodDF, aes(x = foodDF[[44]], y = foodDF[[43]])) +
@@ -124,12 +123,67 @@ ggplot(foodDF, aes(x = foodDF[[3]], y = foodDF[[44]])) +
   theme_minimal()
 
 ```
+
 ```{r}
 ggplot(foodDF, aes(x = foodDF[[45]], fill = foodDF[[43]])) + 
   geom_bar(position = "stack") +
-  labs(title = "age",
-       x = "rate for ireland  Cuisine",
+  labs(title = "rate for ireland  Cuisine",
+       x = "age",
        y = "Count") +
   theme_minimal()
 ```
 
+```{r}
+# Load necessary libraries
+library(tidyverse)
+library(ggplot2)
+
+# Read the CSV file
+data <- read.csv("cleaned_food_world_cup_data_filled_by_global_median.csv")
+
+# View column names to filter relevant data
+colnames(data)
+
+# Select relevant personal factors and cuisine rating columns
+personal_factors <- c("Gender", "Age", "Household.Income", "Education")
+rating_columns <- grep("Please.rate", colnames(data), value = TRUE)
+
+# Subset and clean data
+ratings_data <- data %>%
+  select(all_of(personal_factors), all_of(rating_columns)) %>%
+  drop_na(any_of(rating_columns))
+
+```
+
+Calculating Average Ratings
+
+**By Age Group**:
+
+```{r}
+#Calculating Average Ratings
+
+ratings_data$Age <- factor(ratings_data$Age, levels = c("18-29", "30-44", "45-60", "60+"))
+
+age_mean_ratings <- ratings_data %>%
+  group_by(Age) %>%
+  summarise(across(contains("Please rate"), mean, na.rm = TRUE))
+
+print(age_mean_ratings)
+
+```
+
+**By Income**:
+
+```{r}
+
+ratings_data$Household.Income <- factor(ratings_data$Household.Income, levels = c(
+  "$0 - $24,999", "$25,000 - $49,999", "$50,000 - $99,999",
+  "$100,000 - $149,999", "$150,000 or more"))
+
+income_mean_ratings <- ratings_data %>%
+  group_by(Household.Income) %>%
+  summarise(across(contains("Please rate"), mean, na.rm = TRUE))
+
+print(income_mean_ratings)
+
+```
