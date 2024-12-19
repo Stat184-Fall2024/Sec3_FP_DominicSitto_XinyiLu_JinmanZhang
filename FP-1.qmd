@@ -1,0 +1,163 @@
+---
+title: Final Activity
+format: html
+author: Dominic Sitto, Xinyi Lu, Jinman Zhang
+date: December 4th, 2024
+self-contained: true
+---
+
+## dependencies
+
+```{r}
+library(ggplot2)
+
+library(tidyverse)
+library(Stat2Data)
+library(dplyr)
+library(ggplot2)
+library(dcData)
+
+foodDF <- read_csv("food-world-cup-data.csv")
+```
+
+### 1. The file contains abnormal characters such as Ê, clean up these characters.
+
+--\>We replaced them in Excel.
+
+## Adding titles to columns
+
+```{r}
+colnames(foodDF) <- c("RespondentID","Generally speaking, how would you rate your level of knowledge of cuisines from different parts of the world?","How much, if at all, are you interested in cuisines from different parts of the world?","Please rate how much you like the traditional cuisine of Algeria.","Please rate how much you like the traditional cuisine of Argentina.","Please rate how much you like the traditional cuisine of Australia.","Please rate how much you like the traditional cuisine of Belgium.","Please rate how much you like the traditional cuisine of Bosnia and Herzegovina.","Please rate how much you like the traditional cuisine of Brazil.","Please rate how much you like the traditional cuisine of Cameroon.","Please rate how much you like the traditional cuisine of Chile.","Please rate how much you like the traditional cuisine of Colombia.","Please rate how much you like the traditional cuisine of Costa Rica.","Please rate how much you like the traditional cuisine of Croatia.","Please rate how much you like the traditional cuisine of Ecuador.","Please rate how much you like the traditional cuisine of England.","Please rate how much you like the traditional cuisine of France.","Please rate how much you like the traditional cuisine of Germany.","Please rate how much you like the traditional cuisine of Ghana.","Please rate how much you like the traditional cuisine of Greece.","Please rate how much you like the traditional cuisine of Honduras.","Please rate how much you like the traditional cuisine of Iran.","Please rate how much you like the traditional cuisine of Italy.","Please rate how much you like the traditional cuisine of Ivory Coast.","Please rate how much you like the traditional cuisine of Japan.","Please rate how much you like the traditional cuisine of Mexico.","Please rate how much you like the traditional cuisine of the Netherlands.","Please rate how much you like the traditional cuisine of Nigeria.","Please rate how much you like the traditional cuisine of Portugal.","Please rate how much you like the traditional cuisine of Russia.","Please rate how much you like the traditional cuisine of South Korea.","Please rate how much you like the traditional cuisine of Spain.","Please rate how much you like the traditional cuisine of Switzerland.","Please rate how much you like the traditional cuisine of United States.","Please rate how much you like the traditional cuisine of Uruguay.","Please rate how much you like the traditional cuisine of China.","Please rate how much you like the traditional cuisine of India.","Please rate how much you like the traditional cuisine of Thailand.","Please rate how much you like the traditional cuisine of Turkey.","Please rate how much you like the traditional cuisine of Cuba.","Please rate how much you like the traditional cuisine of Ethiopia.","Please rate how much you like the traditional cuisine of Vietnam.","Please rate how much you like the traditional cuisine of Ireland.","Gender","Age","Household_Income","Education","Location (Census Region)"
+)
+```
+
+### 2. Data impute
+
+```{r}
+
+foodDF_imputed <- foodDF %>%
+  group_by(`Location (Census Region)`, Gender, Age) %>%
+  mutate(across(where(is.numeric), ~ ifelse(is.na(.), median(., na.rm = TRUE), .))) %>%
+  ungroup() %>%
+  mutate(across(where(is.numeric), ~ ifelse(is.na(.), median(., na.rm = TRUE), .)))
+
+write_csv(foodDF_imputed, "cleaned_food_world_cup_data_filled_by_global_median.csv")
+
+foodDF <- foodDF_imputed;
+
+```
+
+
+## Data Visualizations for the World Cup Food Study
+
+In this section, we will be sharing several data visualizations (both tables and figures) that help analyze the data.
+
+```{r}
+# Display the column names of the dataset
+colnames(foodDF)
+```
+
+### **Figure 1**
+
+```{r}
+ggplot(foodDF, aes(x = foodDF[[44]], y = foodDF[[43]])) +
+  geom_violin() +
+  labs(title = "Density of Ratings for Ireland Cuisine by Gender",
+       x = "Gender",
+       y = "Rating of Ireland Cuisine") +
+  theme_minimal()
+
+```
+
+```{r}
+ggplot(foodDF, aes(x =foodDF[[44]])) +
+  geom_bar(fill = "skyblue") +
+  labs(title = "Gender Distribution",
+       x = "Gender",
+       y = "Count")
+
+
+
+```
+
+```{r}
+ggplot(foodDF, aes(x = foodDF[[44]], fill = foodDF[[23]])) + 
+  geom_bar(position = "stack") +
+  labs(title = "Italy Cuisine Rating by Gender",
+       x = "Gender",
+       y = "Count") +
+  theme_minimal()
+
+```
+
+```{r}
+
+ggplot(foodDF, aes(x = foodDF[[2]], fill = foodDF[[47]])) + 
+  geom_bar(position = "stack") +
+  labs(title = "knowledge level of Cuisine by education",
+       x = "knowledge level of Cuisine",
+       y = "Count") +
+  theme_minimal()
+```
+
+```{r}
+ggplot(foodDF, aes(x = foodDF[[3]], y = foodDF[[44]])) +
+  geom_boxplot() +
+  labs(title = "Relationship between how much people are interested in cuisines and gender",
+       x = "how much people are interested in cuisines from different parts of the world", y = "gender") +
+  theme_minimal()
+
+```
+
+```{r}
+ggplot(foodDF, aes(x = foodDF[[45]], fill = foodDF[[43]])) + 
+  geom_bar(position = "stack") +
+  labs(title = "rate for ireland  Cuisine",
+       x = "age",
+       y = "Count") +
+  theme_minimal()
+```
+
+```{r}
+
+personal_factors <- c("Gender", "Age", "Household_Income", "Education")
+rating_columns <- grep("Please.rate", colnames(data), value = TRUE)
+
+# Subset and clean data
+ratings_data <- foodDF %>%
+  select(all_of(personal_factors), all_of(rating_columns)) %>%
+  drop_na(any_of(rating_columns))
+
+```
+
+Calculating Average Ratings
+
+**By Age Group**:
+
+```{r}
+
+ratings_data$Age <- factor(ratings_data$Age, levels = c("18-29", "30-44", "45-60", "60+"))
+
+age_mean_ratings <- ratings_data %>%
+  group_by(Age) %>%
+  summarise(across(contains("Please rate"), mean, na.rm = TRUE))
+
+print(age_mean_ratings)
+
+```
+
+**By Income**:
+
+```{r}
+
+ratings_data$Household.Income <- factor(ratings_data$Household_Income, levels = c(
+  "$0 - $24,999", "$25,000 - $49,999", "$50,000 - $99,999",
+  "$100,000 - $149,999", "$150,000 or more"))
+
+income_mean_ratings <- ratings_data %>%
+  group_by(Household.Income) %>%
+  summarise(across(contains("Please rate"), mean, na.rm = TRUE))
+
+print(income_mean_ratings)
+
+```
