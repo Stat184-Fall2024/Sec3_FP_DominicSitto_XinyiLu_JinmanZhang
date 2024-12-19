@@ -1,0 +1,221 @@
+---
+title: Final Activity
+format: html
+author: Dominic Sitto, Xinyi Lu, Jinman Zhang
+date: December 4th, 2024
+echo: false
+warning: false
+message: false
+self-contained: true
+---
+
+```{r}
+library(ggplot2)
+
+library(tidyverse)
+library(Stat2Data)
+library(dplyr)
+library(ggplot2)
+library(dcData)
+
+foodDF <- read_csv("food-world-cup-data.csv")
+
+```
+
+## Introduction:
+
+
+#### Earth is full of so many different types of people and also many different types of cuisine. This project explores how people with different backgrounds react to different cuisines from across the world. The dataset is from FiveThirtyEight, a media outlet that kindly adds their data to a GitHub Repo. This Data is also used in the stories: "The FiveThirtyEight International Food Association's 2014 World Cup" & "What is American's Favorite Global Cuisine?" While they explore specifically how Americans react to different cuisines across the globe, we will be looking to see if there are any major correlations with other groupings.
+
+## Dataset:
+
+Dataset: Food World Cup[^1]
+
+#### This dataset from FiveThirtyEight includes 48 different columns representing personal information about the participant & their ratings of different country's traditional cuisine:
+
+
+```{r}
+colnames(foodDF) <- c("RespondentID","Generally speaking, how would you rate your level of knowledge of cuisines from different parts of the world?","How much, if at all, are you interested in cuisines from different parts of the world?","Please rate how much you like the traditional cuisine of Algeria.","Please rate how much you like the traditional cuisine of Argentina.","Please rate how much you like the traditional cuisine of Australia.","Please rate how much you like the traditional cuisine of Belgium.","Please rate how much you like the traditional cuisine of Bosnia and Herzegovina.","Please rate how much you like the traditional cuisine of Brazil.","Please rate how much you like the traditional cuisine of Cameroon.","Please rate how much you like the traditional cuisine of Chile.","Please rate how much you like the traditional cuisine of Colombia.","Please rate how much you like the traditional cuisine of Costa Rica.","Please rate how much you like the traditional cuisine of Croatia.","Please rate how much you like the traditional cuisine of Ecuador.","Please rate how much you like the traditional cuisine of England.","Please rate how much you like the traditional cuisine of France.","Please rate how much you like the traditional cuisine of Germany.","Please rate how much you like the traditional cuisine of Ghana.","Please rate how much you like the traditional cuisine of Greece.","Please rate how much you like the traditional cuisine of Honduras.","Please rate how much you like the traditional cuisine of Iran.","Please rate how much you like the traditional cuisine of Italy.","Please rate how much you like the traditional cuisine of Ivory Coast.","Please rate how much you like the traditional cuisine of Japan.","Please rate how much you like the traditional cuisine of Mexico.","Please rate how much you like the traditional cuisine of the Netherlands.","Please rate how much you like the traditional cuisine of Nigeria.","Please rate how much you like the traditional cuisine of Portugal.","Please rate how much you like the traditional cuisine of Russia.","Please rate how much you like the traditional cuisine of South Korea.","Please rate how much you like the traditional cuisine of Spain.","Please rate how much you like the traditional cuisine of Switzerland.","Please rate how much you like the traditional cuisine of United States.","Please rate how much you like the traditional cuisine of Uruguay.","Please rate how much you like the traditional cuisine of China.","Please rate how much you like the traditional cuisine of India.","Please rate how much you like the traditional cuisine of Thailand.","Please rate how much you like the traditional cuisine of Turkey.","Please rate how much you like the traditional cuisine of Cuba.","Please rate how much you like the traditional cuisine of Ethiopia.","Please rate how much you like the traditional cuisine of Vietnam.","Please rate how much you like the traditional cuisine of Ireland.","Gender","Age","Household_Income","Education","Location (Census Region)"
+)
+```
+
+
+```{r}
+
+foodDF_imputed <- foodDF %>%
+  group_by(`Location (Census Region)`, Gender, Age) %>%
+  mutate(across(where(is.numeric), ~ ifelse(is.na(.), median(., na.rm = TRUE), .))) %>%
+  ungroup() %>%
+  mutate(across(where(is.numeric), ~ ifelse(is.na(.), median(., na.rm = TRUE), .)))
+
+foodDF_imputed[, 4:43] <- sapply(foodDF_imputed[, 4:43], as.numeric)
+
+write_csv(foodDF_imputed, "noncleaned_food_world_cup_data_filled_by_global_median.csv")
+##Marked as "noncleaned" because this will still have some errors as it is not cleaned through excel as well.
+
+foodDF <- read_csv("noncleaned_food_world_cup_data_filled_by_global_median.csv")
+
+```
+
+
+
+
+
+```{r}
+# Display the column names of the dataset
+colnames(foodDF)
+```
+
+#### There are 1239 total rows in this dataset, so any conclusions will require further evidence to fully support from such a small dataset. Another drawback to this data is how many of these answers are very subjective to the participant as two people with the same 'Knowledge of cuisines from different parts of the world' might rate themselves differently, or more obviously people rating their enjoyment of different cuisines. Participants on this dataset have also understandably left many countries or some personal questions blank or with NA or N/A. To clean the dataset we first had to remove the headers row, the headers row had commas in the questions and lead to errors when trying to read a csv with commas in the entrys. We readded the headers in the dataset after loading it into R. Then, we removed some non english symbols from the responses. Next, we imputed some of the NAs with the median values, to keep the overall trend the same. 
+
+## Exploratory Findings
+
+#### We tested some simple graphs first to see if there would be any obvious corellations. First we tested with a random country, Ireland. We looked at many Violin Graphs of how different factors might affect someones rating of Irish food. We looked at Gender, Age, Income, Education & Geographic Location.
+
+```{r}
+ggplot(foodDF, aes(x = foodDF[[44]], y = foodDF[[43]])) +
+  geom_violin() +
+  labs(title = "Density of Ratings for Ireland Cuisine by Gender",
+       x = "Gender",
+       y = "Rating of Ireland Cuisine")
+
+```
+
+```{r}
+ggplot(foodDF, aes(x = foodDF[[45]], y = foodDF[[43]])) +
+  geom_violin() +
+  labs(title = "Density of Ratings for Ireland Cuisine by Age",
+       x = "Age",
+       y = "Rating of Ireland Cuisine")
+
+```
+
+```{r}
+ggplot(foodDF, aes(x = foodDF[[46]], y = foodDF[[43]])) +
+  geom_violin() +
+  labs(title = "Density of Ratings for Ireland Cuisine by Household_Income",
+       x = "Household_Income",
+       y = "Rating of Ireland Cuisine")
+
+```
+
+```{r}
+ggplot(foodDF, aes(x = foodDF[[47]], y = foodDF[[43]])) +
+  geom_violin() +
+  labs(title = "Density of Ratings for Ireland Cuisine by Education",
+       x = "Education",
+       y = "Rating of Ireland Cuisine")
+
+```
+
+```{r}
+ggplot(foodDF, aes(x = foodDF[[48]], y = foodDF[[43]])) +
+  geom_violin() +
+  labs(title = "Density of Ratings for Ireland Cuisine by Location",
+       x = "Location (Census Region)",
+       y = "Rating of Ireland Cuisine")
+
+```
+
+####  While there were some small variation, there is no clear corellation with specifically Irish food. We then did some analysis of our dataset:
+```{r}
+ggplot(foodDF, aes(x = foodDF[[45]], fill = foodDF[[43]])) + 
+  geom_bar(position = "stack") +
+  labs(title = "Age Distribution of Participants",
+       x = "age",
+       y = "Count") +
+  theme_minimal()
+```
+```{r}
+
+ggplot(foodDF, aes(x = foodDF[[2]], fill = foodDF[[47]])) + 
+  geom_bar(position = "stack") +
+  labs(title = "Knowledge Level of Cuisine by Education",
+       x = "knowledge level of Cuisine",
+       y = "Count") +
+  theme_minimal()
+```
+```{r}
+ggplot(foodDF, aes(x =foodDF[[44]])) +
+  geom_bar(fill = "skyblue") +
+  labs(title = "Gender Distribution of Participants",
+       x = "Gender",
+       y = "Count")
+```
+
+```{r}
+
+personal_factors <- c("Gender", "Age", "Household_Income", "Education")
+rating_columns <- grep("Please.rate", colnames(data), value = TRUE)
+
+# Subset and clean data
+ratings_data <- foodDF %>%
+  select(all_of(personal_factors), all_of(rating_columns)) %>%
+  drop_na(any_of(rating_columns))
+
+
+
+```
+
+## Methods
+
+#### It would be wasteful to spend time searching each individual country and looking to see if there was any correlation so we created a 3 dimensional graph showing how people of different backgrounds rate different cuisines. These graphs will be reading values of 1-2 as disliking and 4-5 as liking, values of 3 or NA will be removed as we aren't looking for people that are ok with the food or people that didn't rate the food. We had to also pivot the dataset to be longer so that each row is one countryrating-person pair instead of one person with all of their country ratings. Then we had to pivot wide once again to differentiate through the different factors. Lastly we made scatter graphs depicting each factor across each different country.
+
+```{r}
+foodDFPivot <- foodDF %>%
+  pivot_longer(
+    cols = starts_with("Please"),
+    names_to = ("Country"),
+    names_prefix = ("Cntry"),
+    values_to = ("Rating"),
+    values_drop_na = TRUE
+  ) %>%
+  mutate(Rating = case_match(
+      .x = Rating,
+      1 ~ "Dislike",
+      2 ~ "Dislike",
+      4 ~ "Like",
+      5 ~ "Like",
+   )
+  ) 
+
+foodDFModifiedGender <- foodDFPivot %>%
+  group_by(Country, Gender) %>%
+  summarize(count = (length(which((Rating == "Like"))) / (length(which((Rating == "Dislike"))) + length(which((Rating == "Like"))))))
+
+foodDFModifiedAge <- foodDFPivot %>%
+  group_by(Country, Age) %>%
+  summarize(count = (length(which((Rating == "Like"))) / (length(which((Rating == "Dislike"))) + length(which((Rating == "Like"))))))
+
+foodDFModifiedIncome <- foodDFPivot %>%
+  group_by(Country, Household_Income) %>%
+  summarize(count = (length(which((Rating == "Like"))) / (length(which((Rating == "Dislike"))) + length(which((Rating == "Like"))))))
+
+foodDFModifiedEdu <- foodDFPivot %>%
+  group_by(Country, Education) %>%
+  summarize(count = (length(which((Rating == "Like"))) / (length(which((Rating == "Dislike"))) + length(which((Rating == "Like"))))))
+
+
+
+ggplot(foodDFModifiedGender, aes(x = Country, y = count)) + 
+    geom_point(aes(color = Gender))
+
+ggplot(foodDFModifiedAge, aes(x = Country, y = count)) + 
+    geom_point(aes(color = Age))
+
+ggplot(foodDFModifiedIncome, aes(x = Country, y = count)) + 
+    geom_point(aes(color = Household_Income))
+
+ggplot(foodDFModifiedEdu, aes(x = Country, y = count)) + 
+    geom_point(aes(color = Education))
+
+```
+
+## Results
+#### While it is difficult to tell which country is which. It is clear that certain countries do, in fact, have correlations with different personal factors such as Gender, Age, Income and Education. There are also some broad correlations, for example in the Age Graph, you can tell that almost always someone from the 30-44 or 45-60 group is at the top while the >60 is almost always near the bottom. It would be interesting to further research by looking specifically at some of the countries that have the clearest corellations, but it is clear that although Ireland might not have clear corellations, it is worth looking into other countries listed in this data set.
+
+[^1]: FiveThirtyEight, food-world-cup (2024) at https://github.com/fivethirtyeight/data 
+
+```{r codeAppend, ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+```
+
